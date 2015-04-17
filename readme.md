@@ -1,6 +1,6 @@
-Plugin Name: Store Just Transients Persistently
-Plugin URI: https://github.com/ashfame/Store-Just-Transients-Persistently/
-Description: Store Just Transients Persistently in memcached, when object cache can't be used. Activate it as a regular plugin. Improves transient read speed!
-Author: Ashfame
-Version: 0.1
-Author URI: http://ashfame.com/
+Store Just Transients Persistently
+==================================
+
+WordPress plugin to store just transients in memcached, without enabling object-caching as whole (when you can't).
+
+Activate it as a regular plugin. Improves transient read speed (test results show speed increased by 33%)!
