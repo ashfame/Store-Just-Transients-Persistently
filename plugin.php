@@ -39,6 +39,9 @@ class Ashfame_Store_Just_Transients_Persistently {
 		add_action( 'init', array( $this, 'add_all_pre_get_transients_filter' ) );
 
 		$this->add_memcached_servers();
+
+		// Paid Support link in plugins listing
+		add_filter( 'plugin_action_links', array( $this, 'support_plugin_action_link' ), 10, 2 );
 	}
 
 	public function save_transient_persistently( $transient, $value, $expiration ) {
@@ -203,6 +206,16 @@ class Ashfame_Store_Just_Transients_Persistently {
 
 	public function flush() {
 		$this->mc[ 'default' ]->flush();
+	}
+
+	public function support_plugin_action_link( $links, $file ) {
+		// Also check using strpos because when plugin is actually a symlink inside plugins folder, its plugin_basename will be based off its actual path
+		if ( $file == plugin_basename( __FILE__ ) || strpos( plugin_basename( __FILE__ ), $file ) !== false ) {
+			$support_link = '<a href="http://blog.ashfame.com/contact/">Premium Support</a>';
+			$report_issue_link = '<a href="https://github.com/ashfame/Store-Just-Transients-Persistently/issues/">Report Issue</a>';
+			$links = array_merge( array( $support_link, $report_issue_link ), $links );
+		}
+		return $links;
 	}
 }
 
