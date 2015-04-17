@@ -9,6 +9,9 @@ Version: 0.1
 Author URI: http://ashfame.com/
 */
 
+// die if called directly
+defined( 'ABSPATH' ) || die();
+
 class Ashfame_Store_Just_Transients_Persistently {
 	var $mc;
 	var $cache;
