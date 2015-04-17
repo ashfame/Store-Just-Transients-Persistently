@@ -2,8 +2,8 @@
 
 /*
 Plugin Name: Store Just Transients Persistently
-Plugin URI:
-Description: Store Just Transients Persistently in memcached, activate it as a regular plugin
+Plugin URI: https://github.com/ashfame/Store-Just-Transients-Persistently/
+Description: Store Just Transients Persistently in memcached, activate it as a regular plugin. Improves transient read speed!
 Author: Ashfame
 Version: 0.1
 Author URI: http://ashfame.com
@@ -13,12 +13,24 @@ class Ashfame_Store_Just_Transients_Persistently {
 	var $mc;
 	var $cache;
 	var $debug = false;
+	var $debug_log_file;
 
 	public function __construct() {
 		// Don't do anything if object-cache.php file is in use, because this plugin is meant to store transients in memcached only when object caching can't be enabled for some reason
 		// (Eg: Wishlist plugin updating rows in option table directly, so object cache becomes stale and doesn't even know it)
 		if ( wp_using_ext_object_cache() ) {
 			return;
+		}
+
+		// switch debug ON if WP_DEBUG is true
+		$this->debug = defined( 'WP_DEBUG' ) && WP_DEBUG;
+
+		// define log file url in tmp directory with a unique name as per the site's url
+		$this->$debug_log_file = trailingslashit( sys_get_temp_dir() ) . 'sjtp-' . str_replace( array( 'http://', 'https://' ), array( '', '' ), home_url() ) . '.log';
+
+		// override WP-CLI transient delete-all command
+		if ( defined( 'WP_CLI' ) and WP_CLI ) {
+			include_once 'override-wp-cli.php';
 		}
 
 		// plug itself into WP *_transient()
@@ -112,14 +124,14 @@ class Ashfame_Store_Just_Transients_Persistently {
 
 	public function failure_callback( $host, $port ) {
 		if ( $this->debug ) {
-			error_log( "Connection failure for $host:$port\n", 3, '/tmp/memcached.log' );
+			error_log( "Connection failure for $host:$port\n", 3, $this->debug_log_file );
 		}
 	}
 
 	/* set() sets value whatever we ask it to */
 	public function set( $id, $data, $expire = 0 ) {
 		if ( $this->debug ) {
-			error_log( __METHOD__ . ' call for ' . $id . ' value = ' . $data . PHP_EOL, 3, '/tmp/biws.log' );
+			error_log( __METHOD__ . ' call for ' . $id . ' value = ' . $data . PHP_EOL, 3, $this->debug_log_file );
 		}
 		if ( is_object( $data ) ) {
 			$data = clone $data;
@@ -131,10 +143,10 @@ class Ashfame_Store_Just_Transients_Persistently {
 		return $response;
 	}
 
-	/* add() adds the value only if it doesn't exist already */
+	/* add() adds the value only if it doesn't already exist */
 	public function add( $id, $data, $expire = 0 ) {
 		if ( $this->debug ) {
-			error_log( __METHOD__ . ' call for ' . $id . ' value = ' . $data . PHP_EOL, 3, '/tmp/biws.log' );
+			error_log( __METHOD__ . ' call for ' . $id . ' value = ' . $data . PHP_EOL, 3, $this->debug_log_file );
 		}
 		if ( is_object( $data ) ) {
 			$data = clone $data;
@@ -153,7 +165,7 @@ class Ashfame_Store_Just_Transients_Persistently {
 
 	public function delete( $id ) {
 		if ( $this->debug ) {
-			error_log( __METHOD__ . ' call for ' . $id . PHP_EOL, 3, '/tmp/biws.log' );
+			error_log( __METHOD__ . ' call for ' . $id . PHP_EOL, 3, $this->debug_log_file );
 		}
 		if ( isset( $this->cache[ $id ] ) ) {
 			unset( $this->cache[ $id ] );
@@ -163,7 +175,7 @@ class Ashfame_Store_Just_Transients_Persistently {
 
 	public function get( $id ) {
 		if ( $this->debug ) {
-			error_log( __METHOD__ . ' call for ' . $id . PHP_EOL, 3, '/tmp/biws.log' );
+			error_log( __METHOD__ . ' call for ' . $id . PHP_EOL, 3, $this->debug_log_file );
 		}
 		if ( isset( $this->cache[ $id ] ) ) {
 			if ( is_object( $this->cache[ $id ] ) ) {
@@ -184,7 +196,7 @@ class Ashfame_Store_Just_Transients_Persistently {
 
 	public function close() {
 		if ( $this->debug ) {
-			error_log( __METHOD__ . ' call' . PHP_EOL, 3, '/tmp/biws.log' );
+			error_log( __METHOD__ . ' call' . PHP_EOL, 3, $this->debug_log_file );
 		}
 		$this->mc[ 'default' ]->close();
 	}
@@ -192,10 +204,6 @@ class Ashfame_Store_Just_Transients_Persistently {
 	public function flush() {
 		$this->mc[ 'default' ]->flush();
 	}
-}
-
-if ( defined( 'WP_CLI' ) and WP_CLI ) {
-	include_once 'override-wp-cli.php';
 }
 
 $Ashfame_Store_Just_Transients_Persistently = new Ashfame_Store_Just_Transients_Persistently();
