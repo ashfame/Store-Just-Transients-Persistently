@@ -26,7 +26,7 @@ class Ashfame_Store_Just_Transients_Persistently {
 		$this->debug = defined( 'WP_DEBUG' ) && WP_DEBUG;
 
 		// define log file url in tmp directory with a unique name as per the site's url
-		$this->$debug_log_file = trailingslashit( sys_get_temp_dir() ) . 'sjtp-' . str_replace( array( 'http://', 'https://' ), array( '', '' ), home_url() ) . '.log';
+		$this->debug_log_file = trailingslashit( sys_get_temp_dir() ) . 'sjtp-' . str_replace( array( 'http://', 'https://' ), array( '', '' ), home_url() ) . '.log';
 
 		// override WP-CLI transient delete-all command
 		if ( defined( 'WP_CLI' ) and WP_CLI ) {
